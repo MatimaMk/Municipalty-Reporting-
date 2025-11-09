@@ -8,10 +8,14 @@ import { storageUtils } from "@/app/utils/localStorage";
 
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dashboardPath, setDashboardPath] = useState("/resident-dashboard");
 
   useEffect(() => {
     const user = storageUtils.getCurrentUser();
     setIsLoggedIn(!!user);
+    if (user) {
+      setDashboardPath(user.role === "staff" ? "/staff-dashboard" : "/resident-dashboard");
+    }
   }, []);
 
   return (
@@ -31,7 +35,7 @@ export default function LandingPage() {
         <nav className={styles.nav}>
           {isLoggedIn ? (
             <>
-              <Link href="/dashboard" className={styles.navLink}>
+              <Link href={dashboardPath} className={styles.navLink}>
                 Dashboard
               </Link>
               <Link

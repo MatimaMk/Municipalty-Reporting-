@@ -15,6 +15,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "resident" as "resident" | "staff",
     agreeTerms: false,
   });
 
@@ -31,8 +32,9 @@ export default function RegisterPage() {
     "weak" | "medium" | "strong" | ""
   >("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const target = e.target as HTMLInputElement;
+    const { name, value, type, checked } = target;
     const newValue = type === "checkbox" ? checked : value;
 
     setFormData((prev) => ({
@@ -131,13 +133,15 @@ export default function RegisterPage() {
       lastName: formData.lastName,
       email: formData.email,
       password: formData.password,
+      role: formData.role,
     });
 
     // Auto-login after registration
     storageUtils.setCurrentUser(newUser);
 
-    // Redirect to dashboard
-    router.push("/dashboard");
+    // Redirect to appropriate dashboard based on role
+    const dashboardPath = newUser.role === "staff" ? "/staff-dashboard" : "/resident-dashboard";
+    router.push(dashboardPath);
   };
 
   return (
@@ -250,6 +254,35 @@ export default function RegisterPage() {
               {errors.email && (
                 <span className={styles.errorMessage}>{errors.email}</span>
               )}
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="role" className={styles.label}>
+                Account Type <span className={styles.required}>*</span>
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className={styles.input}
+              >
+                <option value="resident">Resident - Report Issues</option>
+                <option value="staff">
+                  Municipality Staff - Manage Issues
+                </option>
+              </select>
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#666",
+                  marginTop: "0.5rem",
+                }}
+              >
+                Choose &quot;Resident&quot; to report community issues or
+                &quot;Municipality Staff&quot; to access the management
+                dashboard.
+              </p>
             </div>
 
             <div className={styles.formGroup}>
