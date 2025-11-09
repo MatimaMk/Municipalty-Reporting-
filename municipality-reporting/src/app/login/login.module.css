@@ -1,0 +1,253 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  background: linear-gradient(135deg, #1e5128 0%, #2d6a4f 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.backgroundPattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+  background-image: url("/images/Sunland-Baobab-before-5.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.leftPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  color: white;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  margin-bottom: 2rem;
+}
+
+.logoImage {
+  height: 100px;
+  width: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.welcomeText {
+  text-align: center;
+  max-width: 500px;
+}
+
+.welcomeTitle {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.welcomeSubtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.rightPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.formCard {
+  background: white;
+  padding: 3rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 450px;
+}
+
+.formTitle {
+  font-size: 2rem;
+  color: #1e5128;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.formSubtitle {
+  color: #666;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  color: #1e5128;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.input {
+  padding: 0.875rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #2d6a4f;
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+}
+
+.errorMessage {
+  color: #e76f51;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.rememberForgot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  cursor: pointer;
+}
+
+.checkbox {
+  cursor: pointer;
+}
+
+.forgotLink {
+  color: #2d6a4f;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.forgotLink:hover {
+  color: #1e5128;
+}
+
+.submitButton {
+  padding: 1rem;
+  background: linear-gradient(135deg, #2d6a4f 0%, #1e5128 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(45, 106, 79, 0.4);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+.divider {
+  text-align: center;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.dividerText {
+  background: white;
+  padding: 0 1rem;
+  position: relative;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.registerPrompt {
+  text-align: center;
+  color: #666;
+}
+
+.registerLink {
+  color: #2d6a4f;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.registerLink:hover {
+  color: #1e5128;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+}
+
+.backLink:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 968px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .leftPanel {
+    padding: 2rem 1rem;
+  }
+
+  .welcomeTitle {
+    font-size: 2rem;
+  }
+
+  .formCard {
+    padding: 2rem;
+  }
+}
