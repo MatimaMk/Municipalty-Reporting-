@@ -51,7 +51,7 @@ export default function LandingPage() {
           ) : (
             <>
               <Link href="/create-report" className={`${styles.navLink} ${styles.navLinkReport}`}>
-                📸 Report Issue
+                Report Issue
               </Link>
               <Link href="/login" className={styles.navLink}>
                 Login

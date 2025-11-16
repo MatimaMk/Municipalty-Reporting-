@@ -15,7 +15,7 @@ export default function CreateReportPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [analyzingImage, setAnalyzingImage] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState<ImageAnalysisResult | null>(null);
-  const [location, setLocation] = useState<{ address: string; latitude: number; longitude: number } | null>(null);
+  const [location, setLocation] = useState<{ address?: string; latitude: number; longitude: number } | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [showCamera, setShowCamera] = useState(false);
@@ -288,8 +288,6 @@ export default function CreateReportPage() {
     );
   }
 
-  if (!user) return null;
-
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -305,8 +303,11 @@ export default function CreateReportPage() {
             />
             <span className={styles.logoText}>AI-Powered Reporting</span>
           </div>
-          <button onClick={() => router.push("/resident-dashboard")} className={styles.backButton}>
-            ← Back to Dashboard
+          <button
+            onClick={() => router.push(user ? "/resident-dashboard" : "/landing")}
+            className={styles.backButton}
+          >
+            ← Back to {user ? "Dashboard" : "Home"}
           </button>
         </div>
       </header>
@@ -332,7 +333,7 @@ export default function CreateReportPage() {
 
             {location && !gettingLocation && (
               <div className={styles.locationSuccess}>
-                <span>📍 Location: {location.address}</span>
+                <span>📍 Location: {location.address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`}</span>
               </div>
             )}
           </div>

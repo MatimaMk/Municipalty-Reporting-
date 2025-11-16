@@ -50,28 +50,39 @@
 }
 
 .navLinkReport {
-  background: linear-gradient(135deg, #f59f00 0%, #e67700 100%);
+  background: linear-gradient(135deg, #40c057 0%, #2f9e44 100%);
   color: white;
   font-weight: 700;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(245, 159, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 8px rgba(64, 192, 87, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.navLinkReport::before {
+  content: '📸';
+  margin-right: 0.5rem;
 }
 
 .navLinkReport:hover {
-  background: linear-gradient(135deg, #ff9900 0%, #ff8800 100%);
+  background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 159, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(64, 192, 87, 0.6);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .navLinkPrimary {
-  background: #f4a261;
-  color: #1e5128;
+  background: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+  color: white;
   font-weight: bold;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .navLinkPrimary:hover {
-  background: #e76f51;
-  border-color: #e76f51;
+  background: linear-gradient(135deg, #e76f51 0%, #d0623d 100%);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 111, 81, 0.4);
 }
 
 .hero {
@@ -225,23 +236,43 @@
 }
 
 .heroReportButton {
-  background: linear-gradient(135deg, #f59f00 0%, #e67700 100%);
+  background: linear-gradient(135deg, #40c057 0%, #2f9e44 100%);
   color: white;
-  padding: 1rem 2.5rem;
+  padding: 1.25rem 3rem;
   border-radius: 50px;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 8px 24px rgba(245, 159, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(64, 192, 87, 0.5);
   transition: all 0.3s ease;
-  border: 3px solid #fff;
-  animation: pulse 2s ease-in-out infinite;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+.heroReportButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.heroReportButton:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .heroReportButton:hover {
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 12px 32px rgba(245, 159, 0, 0.6);
-  animation: none;
+  box-shadow: 0 12px 32px rgba(64, 192, 87, 0.7);
+  background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+  border-color: white;
 }
 
 @media (max-width: 768px) {
