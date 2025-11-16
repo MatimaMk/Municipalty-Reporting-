@@ -65,26 +65,83 @@ export default function CreateReportPage() {
   const startCamera = async () => {
     try {
       setDetectionStatus("Requesting camera access...");
+
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Camera not supported on this browser. Please use a modern browser like Chrome, Firefox, or Edge.");
+        return;
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: 1920, height: 1080 },
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
       });
+
       setStream(mediaStream);
       setShowCamera(true);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+      // Use a small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
 
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = () => {
-          setDetectionStatus("Camera ready - Position issue in frame");
-          setCameraReady(true);
-          startObjectDetection();
-        };
-      }
-    } catch (error) {
+          // Force play after metadata loads
+          videoRef.current.onloadedmetadata = () => {
+            if (videoRef.current) {
+              videoRef.current.play()
+                .then(() => {
+                  console.log("Video playing successfully");
+                  setDetectionStatus("✅ Camera ready - Position issue in frame");
+                  setCameraReady(true);
+                  // Start detection after video is confirmed playing
+                  setTimeout(() => {
+                    startObjectDetection();
+                  }, 1000);
+                })
+                .catch((playError) => {
+                  console.error("Video play error:", playError);
+                  // Even if autoplay fails, mark as ready so user can still capture
+                  setDetectionStatus("✅ Camera ready - Ready to capture!");
+                  setCameraReady(true);
+                });
+            }
+          };
+        }
+      }, 100);
+    } catch (error: any) {
       console.error("Camera error:", error);
-      alert("Could not access camera. Please check permissions and ensure you're using HTTPS.");
-      setDetectionStatus("Camera access denied");
+      let errorMessage = "Could not access camera. ";
+
+      if (error.name === "NotAllowedError") {
+        errorMessage = "Camera permission denied. Please allow camera access in your browser settings and try again.";
+      } else if (error.name === "NotFoundError") {
+        errorMessage = "No camera found. Please connect a camera device and try again.";
+      } else if (error.name === "NotReadableError") {
+        errorMessage = "Camera is already in use by another application. Please close other apps using the camera.";
+      } else if (error.name === "OverconstrainedError") {
+        errorMessage = "Camera doesn't meet the requirements. Trying with default settings...";
+        // Try again with simpler constraints
+        try {
+          const simpleStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setStream(simpleStream);
+          setShowCamera(true);
+          if (videoRef.current) {
+            videoRef.current.srcObject = simpleStream;
+            videoRef.current.play();
+            setDetectionStatus("✅ Camera ready!");
+            setCameraReady(true);
+          }
+          return;
+        } catch (retryError) {
+          errorMessage = "Could not access camera with any settings.";
+        }
+      }
+
+      alert(errorMessage);
+      setDetectionStatus("Camera access failed");
     }
   };
 
