@@ -1,40 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./resident.module.css";
 import { storageUtils, User, Issue } from "@/app/utils/localStorage";
-import {
-  getCurrentLocation,
-  formatCoordinates,
-  getGoogleMapsUrl,
-} from "@/app/utils/geoLocation";
-import {
-  categorizeIssue,
-  getPriorityFromCategory,
-  getCategoryDisplayName,
-} from "@/app/utils/aiCategorization";
+import { analyticsUtils } from "@/app/utils/analytics";
+import SmartInsights from "@/app/components/SmartInsights";
+import StatsCard from "@/app/components/StatsCard";
 
 export default function ResidentDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
-  const [showModal, setShowModal] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [loadingLocation, setLoadingLocation] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<string>("");
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "roads",
-    location: "",
-    latitude: undefined as number | undefined,
-    longitude: undefined as number | undefined,
-    photoData: undefined as string | undefined,
-    priority: "medium" as Issue["priority"],
-  });
+  const [analyticsSummary, setAnalyticsSummary] = useState<any>(null);
 
   useEffect(() => {
     const currentUser = storageUtils.getCurrentUser();
@@ -62,120 +42,16 @@ export default function ResidentDashboard() {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
     );
+
+    // Load analytics
+    const summary = analyticsUtils.getAnalyticsSummary(userId);
+    setAnalyticsSummary(summary);
   };
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to logout?")) {
       storageUtils.logout();
       router.push("/landing");
-    }
-  };
-
-  const handleSubmitIssue = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!user) return;
-
-    // Get AI categorization results
-    const aiResult = await categorizeIssue(formData.title, formData.description);
-
-    const newIssue = storageUtils.addIssue({
-      userId: user.id,
-      userName: `${user.firstName} ${user.lastName}`,
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      location: formData.location,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
-      photoData: formData.photoData,
-      aiCategory: aiResult.category,
-      aiConfidence: aiResult.confidence,
-      status: "pending",
-      priority: formData.priority,
-    });
-
-    setMyIssues([newIssue, ...myIssues]);
-    setShowModal(false);
-    setPhotoPreview(null);
-    setAiSuggestion("");
-    setFormData({
-      title: "",
-      description: "",
-      category: "roads",
-      location: "",
-      latitude: undefined,
-      longitude: undefined,
-      photoData: undefined,
-      priority: "medium",
-    });
-  };
-
-  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Photo size must be less than 5MB");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setPhotoPreview(base64);
-      setFormData((prev) => ({ ...prev, photoData: base64 }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleGetLocation = async () => {
-    setLoadingLocation(true);
-    try {
-      const location = await getCurrentLocation();
-      setFormData((prev) => ({
-        ...prev,
-        location:
-          location.address ||
-          formatCoordinates(location.latitude, location.longitude),
-        latitude: location.latitude,
-        longitude: location.longitude,
-      }));
-      alert(`Location detected: ${location.address || "Coordinates saved"}`);
-    } catch (error: any) {
-      alert(error.message || "Could not get location");
-    } finally {
-      setLoadingLocation(false);
-    }
-  };
-
-  const handleAICategorize = async () => {
-    if (!formData.title && !formData.description) {
-      alert("Please enter a title or description first");
-      return;
-    }
-
-    setAiSuggestion("Analyzing with AI...");
-
-    try {
-      const result = await categorizeIssue(formData.title, formData.description);
-      const suggestedPriority = getPriorityFromCategory(result.category);
-
-      setFormData((prev) => ({
-        ...prev,
-        category: result.category,
-        priority: suggestedPriority,
-      }));
-
-      setAiSuggestion(
-        `AI suggests: ${getCategoryDisplayName(result.category)} (${Math.round(
-          result.confidence * 100
-        )}% confidence) - Priority: ${suggestedPriority.toUpperCase()}`
-      );
-    } catch (error) {
-      setAiSuggestion("AI categorization failed. Please select manually.");
-      console.error("AI categorization error:", error);
     }
   };
 
@@ -268,52 +144,82 @@ export default function ResidentDashboard() {
           </p>
           <button
             className={styles.reportButton}
-            onClick={() => setShowModal(true)}
+            onClick={() => router.push("/create-report")}
           >
-            <span>📝</span> Report New Issue
+            <span>🤖</span> AI-Powered Report
           </button>
         </section>
 
-        {/* Statistics Grid */}
+        {/* Smart Insights */}
+        {analyticsSummary && myIssues.length > 0 && (
+          <SmartInsights summary={analyticsSummary} />
+        )}
+
+        {/* Statistics Grid - Using StatsCard Component */}
         <section className={styles.statsGrid}>
-          <div className={`${styles.statCard} ${styles.statCardPending}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Pending</span>
-              <span className={styles.statIcon}>⏳</span>
-            </div>
-            <div className={styles.statValue}>{getStatusCount("pending")}</div>
-            <p className={styles.statDescription}>Awaiting review</p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardProgress}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>In Progress</span>
-              <span className={styles.statIcon}>🔧</span>
-            </div>
-            <div className={styles.statValue}>
-              {getStatusCount("in-progress")}
-            </div>
-            <p className={styles.statDescription}>Being addressed</p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardResolved}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Resolved</span>
-              <span className={styles.statIcon}>✅</span>
-            </div>
-            <div className={styles.statValue}>{getStatusCount("resolved")}</div>
-            <p className={styles.statDescription}>Successfully completed</p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardRejected}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Total Issues</span>
-              <span className={styles.statIcon}>📊</span>
-            </div>
-            <div className={styles.statValue}>{myIssues.length}</div>
-            <p className={styles.statDescription}>All reported issues</p>
-          </div>
+          <StatsCard
+            icon="⏳"
+            title="Pending"
+            value={getStatusCount("pending")}
+            subtitle="Awaiting review"
+            color="orange"
+          />
+          <StatsCard
+            icon="🔧"
+            title="In Progress"
+            value={getStatusCount("in-progress")}
+            subtitle="Being addressed"
+            color="blue"
+          />
+          <StatsCard
+            icon="✅"
+            title="Resolved"
+            value={getStatusCount("resolved")}
+            subtitle="Successfully completed"
+            color="green"
+          />
+          <StatsCard
+            icon="📊"
+            title="Total Issues"
+            value={myIssues.length}
+            subtitle="All reported issues"
+            color="purple"
+          />
         </section>
+
+        {/* Analytics Summary */}
+        {analyticsSummary && myIssues.length > 0 && (
+          <section className={styles.analyticsSection}>
+            <h2 className={styles.sectionTitle}>
+              <span>📊</span> Your Report Statistics
+            </h2>
+            <div className={styles.analyticsGrid}>
+              <div className={styles.analyticsCard}>
+                <h3>📈 Average Resolution Time</h3>
+                <div className={styles.analyticsValue}>
+                  {analyticsSummary.avgResolutionTime > 0
+                    ? `${analyticsSummary.avgResolutionTime} days`
+                    : "N/A"}
+                </div>
+                <p>Time to resolve your reports</p>
+              </div>
+              <div className={styles.analyticsCard}>
+                <h3>🎯 AI Confidence</h3>
+                <div className={styles.analyticsValue}>
+                  {analyticsSummary.aiConfidenceAverage}%
+                </div>
+                <p>AI analysis accuracy</p>
+              </div>
+              <div className={styles.analyticsCard}>
+                <h3>📋 Top Category</h3>
+                <div className={styles.analyticsValue}>
+                  {analyticsSummary.categoryBreakdown[0]?.category || "N/A"}
+                </div>
+                <p>Most reported issue type</p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* My Issues */}
         <section className={styles.myIssues}>
@@ -329,9 +235,9 @@ export default function ResidentDashboard() {
               </p>
               <button
                 className={styles.reportButton}
-                onClick={() => setShowModal(true)}
+                onClick={() => router.push("/create-report")}
               >
-                <span>📝</span> Report Your First Issue
+                <span>🤖</span> AI-Powered Report
               </button>
             </div>
           ) : (
@@ -425,205 +331,6 @@ export default function ResidentDashboard() {
           Peace, Unity and Prosperity
         </p>
       </footer>
-
-      {/* Report Issue Modal */}
-      {showModal && (
-        <div className={styles.modal} onClick={() => setShowModal(false)}>
-          <div
-            className={styles.modalContent}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Report New Issue</h2>
-              <button
-                className={styles.closeButton}
-                onClick={() => setShowModal(false)}
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitIssue} className={styles.form}>
-              <div className={styles.formGroup}>
-                <label htmlFor="title" className={styles.label}>
-                  Issue Title <span className={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className={styles.input}
-                  placeholder="Brief description of the issue"
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="category" className={styles.label}>
-                  Category <span className={styles.required}>*</span>
-                </label>
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  className={styles.select}
-                  required
-                >
-                  <option value="roads">Roads & Infrastructure</option>
-                  <option value="water">Water & Sanitation</option>
-                  <option value="electricity">Electricity</option>
-                  <option value="waste">Waste Management</option>
-                  <option value="safety">Public Safety</option>
-                  <option value="parks">Parks & Recreation</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="location" className={styles.label}>
-                  Location <span className={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
-                  }
-                  className={styles.input}
-                  placeholder="Street address or area"
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="priority" className={styles.label}>
-                  Priority <span className={styles.required}>*</span>
-                </label>
-                <select
-                  id="priority"
-                  value={formData.priority}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      priority: e.target.value as Issue["priority"],
-                    })
-                  }
-                  className={styles.select}
-                  required
-                >
-                  <option value="low">Low - Minor inconvenience</option>
-                  <option value="medium">Medium - Needs attention</option>
-                  <option value="high">High - Significant problem</option>
-                  <option value="urgent">Urgent - Immediate danger</option>
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="description" className={styles.label}>
-                  Description <span className={styles.required}>*</span>
-                </label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  className={styles.textarea}
-                  placeholder="Detailed description of the issue..."
-                  required
-                />
-              </div>
-
-              {/* GPS Location Button */}
-              <div className={styles.formGroup}>
-                <button
-                  type="button"
-                  onClick={handleGetLocation}
-                  className={styles.locationButton}
-                  disabled={loadingLocation}
-                >
-                  {loadingLocation ? "Getting Location..." : "📍 Get Current Location"}
-                </button>
-                {formData.latitude && formData.longitude && (
-                  <p style={{ fontSize: "0.85rem", color: "#2d6a4f", marginTop: "0.5rem" }}>
-                    Location captured: {formatCoordinates(formData.latitude, formData.longitude)}
-                  </p>
-                )}
-              </div>
-
-              {/* Photo Upload */}
-              <div className={styles.formGroup}>
-                <label htmlFor="photo" className={styles.label}>
-                  Add Photo (Optional)
-                </label>
-                <input
-                  type="file"
-                  id="photo"
-                  accept="image/*"
-                  onChange={handlePhotoCapture}
-                  className={styles.fileInput}
-                />
-                {photoPreview && (
-                  <div style={{ marginTop: "1rem" }}>
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      style={{
-                        maxWidth: "100%",
-                        maxHeight: "200px",
-                        borderRadius: "8px",
-                        border: "2px solid #dee2e6"
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* AI Categorization */}
-              <div className={styles.formGroup}>
-                <button
-                  type="button"
-                  onClick={handleAICategorize}
-                  className={styles.aiButton}
-                >
-                  🤖 Suggest Category & Priority
-                </button>
-                {aiSuggestion && (
-                  <p style={{
-                    fontSize: "0.9rem",
-                    color: "#2d6a4f",
-                    marginTop: "0.5rem",
-                    padding: "0.75rem",
-                    background: "#d4edda",
-                    borderRadius: "6px"
-                  }}>
-                    {aiSuggestion}
-                  </p>
-                )}
-              </div>
-
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <button type="submit" className={styles.submitButton}>
-                  Submit Issue
-                </button>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

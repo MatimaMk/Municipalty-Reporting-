@@ -9,10 +9,13 @@ import { storageUtils } from "@/app/utils/localStorage";
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dashboardPath, setDashboardPath] = useState("/resident-dashboard");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const user = storageUtils.getCurrentUser();
-    setIsLoggedIn(!!user);
+    const loggedIn = !!user;
+    setIsLoggedIn(loggedIn);
     if (user) {
       setDashboardPath(user.role === "staff" ? "/staff-dashboard" : "/resident-dashboard");
     }
@@ -33,7 +36,7 @@ export default function LandingPage() {
           <span className={styles.logoText}>Limpopo Provincial Government</span>
         </div>
         <nav className={styles.nav}>
-          {isLoggedIn ? (
+          {mounted && isLoggedIn ? (
             <>
               <Link href={dashboardPath} className={styles.navLink}>
                 Dashboard
@@ -47,6 +50,9 @@ export default function LandingPage() {
             </>
           ) : (
             <>
+              <Link href="/create-report" className={`${styles.navLink} ${styles.navLinkReport}`}>
+                📸 Report Issue
+              </Link>
               <Link href="/login" className={styles.navLink}>
                 Login
               </Link>
@@ -78,9 +84,21 @@ export default function LandingPage() {
             Peace, Unity and Prosperity - Your gateway to government services
             and information
           </p>
-          <Link href="/register" className={styles.heroCTA}>
-            Get Started Today
-          </Link>
+          <div className={styles.heroButtons}>
+            {mounted && !isLoggedIn && (
+              <Link href="/create-report" className={styles.heroReportButton}>
+                📸 Report an Issue (No Login Required)
+              </Link>
+            )}
+            {!mounted && (
+              <Link href="/create-report" className={styles.heroReportButton}>
+                📸 Report an Issue (No Login Required)
+              </Link>
+            )}
+            <Link href={mounted && isLoggedIn ? dashboardPath : "/register"} className={styles.heroCTA}>
+              {mounted && isLoggedIn ? "Go to Dashboard" : "Create Account"}
+            </Link>
+          </div>
         </div>
       </section>
 

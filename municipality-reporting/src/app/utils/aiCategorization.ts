@@ -6,14 +6,47 @@ export interface CategoryResult {
   keywords: string[];
 }
 
+export interface ImageAnalysisResult {
+  title: string;
+  description: string;
+  category: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  issueType: string;
+  confidence: number;
+  keywords: string[];
+  detailedAnalysis: {
+    problemIdentification: string;
+    severityAssessment: string;
+    impactAnalysis: string;
+    rootCause: string;
+    visualEvidence: string[];
+  };
+  recommendations: {
+    immediateActions: string[];
+    longTermSolutions: string[];
+    preventiveMeasures: string[];
+  };
+  estimatedResolution: {
+    timeframe: string;
+    resources: string[];
+    estimatedCost: string;
+    workersRequired: number;
+  };
+  safetyConsiderations: {
+    riskLevel: string;
+    hazards: string[];
+    precautions: string[];
+  };
+}
+
 interface CategoryKeywords {
   category: string;
   keywords: string[];
   priority: "low" | "medium" | "high" | "urgent";
 }
 
-const GEMINI_API_KEY = "AIzaSyDEBeQ57RTd6-a5tbrPEgutCwzE4dV61u8";
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+const GEMINI_API_KEY = "AIzaSyA3bQvZUYEbVwETFvJKyQVl4Xx0xefA1z8";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 const categoryPatterns: CategoryKeywords[] = [
   {
@@ -305,4 +338,36 @@ export function getCategoryDisplayName(category: string): string {
     other: "Other",
   };
   return names[category] || category;
+}
+
+// AI-powered image analysis using Gemini Vision API
+export async function analyzeImage(
+  imageBase64: string,
+  latitude?: number,
+  longitude?: number
+): Promise<ImageAnalysisResult> {
+  try {
+    const response = await fetch("/api/analyze-image", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        imageBase64,
+        latitude,
+        longitude,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to analyze image");
+    }
+
+    const data = await response.json();
+    return data.analysis;
+  } catch (error) {
+    console.error("Error analyzing image:", error);
+    throw error;
+  }
 }

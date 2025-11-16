@@ -49,6 +49,20 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.navLinkReport {
+  background: linear-gradient(135deg, #f59f00 0%, #e67700 100%);
+  color: white;
+  font-weight: 700;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(245, 159, 0, 0.3);
+}
+
+.navLinkReport:hover {
+  background: linear-gradient(135deg, #ff9900 0%, #ff8800 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 159, 0, 0.5);
+}
+
 .navLinkPrimary {
   background: #f4a261;
   color: #1e5128;
@@ -200,6 +214,36 @@
   color: #f4a261;
 }
 
+/* Hero Buttons Container */
+.heroButtons {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.heroReportButton {
+  background: linear-gradient(135deg, #f59f00 0%, #e67700 100%);
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(245, 159, 0, 0.4);
+  transition: all 0.3s ease;
+  border: 3px solid #fff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.heroReportButton:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(245, 159, 0, 0.6);
+  animation: none;
+}
+
 @media (max-width: 768px) {
   .heroTitle {
     font-size: 2rem;
@@ -216,5 +260,16 @@
 
   .featuresGrid {
     grid-template-columns: 1fr;
+  }
+
+  .heroButtons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .heroReportButton,
+  .heroCTA {
+    width: 100%;
+    text-align: center;
   }
 }

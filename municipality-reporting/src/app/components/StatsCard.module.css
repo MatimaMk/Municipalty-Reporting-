@@ -1,0 +1,163 @@
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border-left: 4px solid;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+
+.cardBlue {
+  border-left-color: #339af0;
+}
+
+.cardGreen {
+  border-left-color: #40916c;
+}
+
+.cardOrange {
+  border-left-color: #f59f00;
+}
+
+.cardRed {
+  border-left-color: #e03131;
+}
+
+.cardPurple {
+  border-left-color: #9c36b5;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconWrapper {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.cardBlue .iconWrapper {
+  background: linear-gradient(135deg, #e7f5ff 0%, #d0ebff 100%);
+}
+
+.cardGreen .iconWrapper {
+  background: linear-gradient(135deg, #d3f9d8 0%, #b2f2bb 100%);
+}
+
+.cardOrange .iconWrapper {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+}
+
+.cardRed .iconWrapper {
+  background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%);
+}
+
+.cardPurple .iconWrapper {
+  background: linear-gradient(135deg, #f3d9fa 0%, #e5b3f5 100%);
+}
+
+.icon {
+  display: block;
+}
+
+.content {
+  flex: 1;
+}
+
+.title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.5rem 0;
+}
+
+.value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.cardBlue .value {
+  color: #1971c2;
+}
+
+.cardGreen .value {
+  color: #2d6a4f;
+}
+
+.cardOrange .value {
+  color: #e67700;
+}
+
+.cardRed .value {
+  color: #c92a2a;
+}
+
+.cardPurple .value {
+  color: #862e9c;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #868e96;
+  margin: 0.25rem 0 0 0;
+}
+
+.trend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.trendIcon {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.trendUp {
+  color: #40916c;
+}
+
+.trendDown {
+  color: #e03131;
+}
+
+.trendValue {
+  font-size: 0.85rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .iconWrapper {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .value {
+    font-size: 1.5rem;
+  }
+
+  .title {
+    font-size: 0.8rem;
+  }
+}

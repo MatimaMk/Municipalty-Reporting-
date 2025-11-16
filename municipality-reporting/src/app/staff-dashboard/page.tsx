@@ -5,6 +5,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./staff.module.css";
 import { storageUtils, User, Issue } from "@/app/utils/localStorage";
+import { analyticsUtils } from "@/app/utils/analytics";
+import { exportUtils } from "@/app/utils/export";
+import SmartInsights from "@/app/components/SmartInsights";
+import StatsCard from "@/app/components/StatsCard";
 
 export default function StaffDashboard() {
   const router = useRouter();
@@ -14,6 +18,7 @@ export default function StaffDashboard() {
   const [filteredIssues, setFilteredIssues] = useState<Issue[]>([]);
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [analyticsSummary, setAnalyticsSummary] = useState<any>(null);
 
   const [filters, setFilters] = useState({
     status: "all",
@@ -56,6 +61,14 @@ export default function StaffDashboard() {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
     );
+
+    // Load analytics for all issues (staff sees everything)
+    const summary = analyticsUtils.getAnalyticsSummary();
+    setAnalyticsSummary(summary);
+  };
+
+  const handleExport = (format: "csv" | "json" | "summary") => {
+    exportUtils.exportFiltered(filteredIssues, format);
   };
 
   const applyFilters = () => {
@@ -219,64 +232,123 @@ export default function StaffDashboard() {
           </p>
         </section>
 
-        {/* Statistics Grid */}
+        {/* Smart Insights */}
+        {analyticsSummary && allIssues.length > 0 && (
+          <SmartInsights summary={analyticsSummary} />
+        )}
+
+        {/* Statistics Grid - Using StatsCard Component */}
         <section className={styles.statsGrid}>
-          <div className={`${styles.statCard} ${styles.statCardRed}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Total Issues</span>
-              <span className={styles.statIcon}>📋</span>
-            </div>
-            <div className={styles.statValue}>{stats.total}</div>
-            <p className={styles.statDescription}>All reported issues</p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardOrange}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Pending</span>
-              <span className={styles.statIcon}>⏳</span>
-            </div>
-            <div className={styles.statValue}>{stats.pending}</div>
-            <p className={styles.statDescription}>Awaiting review</p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardBlue}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>In Progress</span>
-              <span className={styles.statIcon}>🔄</span>
-            </div>
-            <div className={styles.statValue}>{stats.inProgress}</div>
-            <p className={styles.statDescription}>Being addressed</p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardGreen}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Resolved</span>
-              <span className={styles.statIcon}>✅</span>
-            </div>
-            <div className={styles.statValue}>{stats.resolved}</div>
-            <p className={styles.statDescription}>Successfully completed</p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardPurple}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Urgent</span>
-              <span className={styles.statIcon}>🚨</span>
-            </div>
-            <div className={styles.statValue}>{stats.urgent}</div>
-            <p className={styles.statDescription}>
-              Requires immediate attention
-            </p>
-          </div>
-
-          <div className={`${styles.statCard} ${styles.statCardGray}`}>
-            <div className={styles.statHeader}>
-              <span className={styles.statTitle}>Rejected</span>
-              <span className={styles.statIcon}>❌</span>
-            </div>
-            <div className={styles.statValue}>{stats.rejected}</div>
-            <p className={styles.statDescription}>Cannot be addressed</p>
-          </div>
+          <StatsCard
+            icon="📋"
+            title="Total Issues"
+            value={stats.total}
+            subtitle="All reported issues"
+            color="purple"
+          />
+          <StatsCard
+            icon="⏳"
+            title="Pending"
+            value={stats.pending}
+            subtitle="Awaiting review"
+            color="orange"
+          />
+          <StatsCard
+            icon="🔄"
+            title="In Progress"
+            value={stats.inProgress}
+            subtitle="Being addressed"
+            color="blue"
+          />
+          <StatsCard
+            icon="✅"
+            title="Resolved"
+            value={stats.resolved}
+            subtitle="Successfully completed"
+            color="green"
+          />
+          <StatsCard
+            icon="🚨"
+            title="Urgent"
+            value={stats.urgent}
+            subtitle="Requires immediate attention"
+            color="red"
+          />
+          <StatsCard
+            icon="❌"
+            title="Rejected"
+            value={stats.rejected}
+            subtitle="Cannot be addressed"
+            color="red"
+          />
         </section>
+
+        {/* Analytics Dashboard */}
+        {analyticsSummary && allIssues.length > 0 && (
+          <section className={styles.analyticsSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>
+                <span>📊</span> Analytics Dashboard
+              </h2>
+              <div className={styles.exportButtons}>
+                <button
+                  className={styles.exportButton}
+                  onClick={() => handleExport("csv")}
+                  title="Export to CSV"
+                >
+                  📄 CSV
+                </button>
+                <button
+                  className={styles.exportButton}
+                  onClick={() => handleExport("json")}
+                  title="Export to JSON"
+                >
+                  📋 JSON
+                </button>
+                <button
+                  className={styles.exportButton}
+                  onClick={() => handleExport("summary")}
+                  title="Export Summary"
+                >
+                  📝 Summary
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.analyticsGrid}>
+              <div className={styles.analyticsCard}>
+                <h3>⏱️ Avg Resolution Time</h3>
+                <div className={styles.analyticsValue}>
+                  {analyticsSummary.avgResolutionTime > 0
+                    ? `${analyticsSummary.avgResolutionTime} days`
+                    : "N/A"}
+                </div>
+                <p>Average time to resolve issues</p>
+              </div>
+              <div className={styles.analyticsCard}>
+                <h3>🤖 AI Confidence</h3>
+                <div className={styles.analyticsValue}>
+                  {analyticsSummary.aiConfidenceAverage}%
+                </div>
+                <p>AI analysis accuracy</p>
+              </div>
+              <div className={styles.analyticsCard}>
+                <h3>📈 Resolution Rate</h3>
+                <div className={styles.analyticsValue}>
+                  {Math.round((stats.resolved / stats.total) * 100)}%
+                </div>
+                <p>Percentage of resolved issues</p>
+              </div>
+              <div className={styles.analyticsCard}>
+                <h3>🏆 Top Category</h3>
+                <div className={styles.analyticsValue} style={{ fontSize: '1.8rem' }}>
+                  {analyticsSummary.categoryBreakdown[0]?.category || "N/A"}
+                </div>
+                <p>{analyticsSummary.categoryBreakdown[0]?.count || 0} reports</p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Filters Section */}
         <section className={styles.filtersSection}>
@@ -458,13 +530,145 @@ export default function StaffDashboard() {
                     gap: "1rem",
                     fontSize: "0.9rem",
                     color: "#666",
-                    marginBottom: "1.5rem",
+                    marginBottom: "1rem",
                   }}
                 >
                   <span>👤 {selectedIssue.userName}</span>
                   <span>📍 {selectedIssue.location}</span>
                   <span>📂 {selectedIssue.category}</span>
+                  <span>⚡ Priority: <strong>{selectedIssue.priority.toUpperCase()}</strong></span>
                 </div>
+
+                {/* AI Analysis Summary for Staff */}
+                {selectedIssue.aiAnalysis && (
+                  <div style={{
+                    background: "linear-gradient(135deg, #e7f5ff 0%, #d0ebff 100%)",
+                    padding: "1.5rem",
+                    borderRadius: "12px",
+                    marginBottom: "1.5rem",
+                    border: "2px solid #339af0"
+                  }}>
+                    <h4 style={{ color: "#1971c2", marginTop: 0, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span>🤖</span> AI Analysis - Resource Requirements
+                    </h4>
+
+                    {/* Cost & Time Estimation */}
+                    {selectedIssue.aiAnalysis.estimatedResolution && (
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                        gap: "1rem",
+                        marginBottom: "1rem",
+                        padding: "1rem",
+                        background: "white",
+                        borderRadius: "8px"
+                      }}>
+                        <div>
+                          <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.25rem" }}>⏰ Timeframe</div>
+                          <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#1971c2" }}>
+                            {selectedIssue.aiAnalysis.estimatedResolution.timeframe}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.25rem" }}>💰 Estimated Cost</div>
+                          <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#2d6a4f" }}>
+                            {selectedIssue.aiAnalysis.estimatedResolution.estimatedCost}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.25rem" }}>👷 Workers Needed</div>
+                          <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#e67700" }}>
+                            {selectedIssue.aiAnalysis.estimatedResolution.workersRequired} workers
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Resources Required */}
+                    {selectedIssue.aiAnalysis.estimatedResolution?.resources && selectedIssue.aiAnalysis.estimatedResolution.resources.length > 0 && (
+                      <div style={{ marginBottom: "1rem" }}>
+                        <div style={{ fontSize: "0.9rem", fontWeight: "600", color: "#1971c2", marginBottom: "0.5rem" }}>
+                          🛠️ Required Resources:
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: "1.5rem", fontSize: "0.9rem", color: "#495057" }}>
+                          {selectedIssue.aiAnalysis.estimatedResolution.resources.slice(0, 5).map((resource, i) => (
+                            <li key={i} style={{ marginBottom: "0.25rem" }}>{resource}</li>
+                          ))}
+                          {selectedIssue.aiAnalysis.estimatedResolution.resources.length > 5 && (
+                            <li style={{ fontStyle: "italic", color: "#868e96" }}>
+                              ... and {selectedIssue.aiAnalysis.estimatedResolution.resources.length - 5} more (view full report)
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Safety Considerations */}
+                    {selectedIssue.aiAnalysis.safetyConsiderations && (
+                      <div style={{
+                        background: selectedIssue.aiAnalysis.safetyConsiderations.riskLevel === "critical" || selectedIssue.aiAnalysis.safetyConsiderations.riskLevel === "high"
+                          ? "#ffe3e3" : "#fff3e0",
+                        padding: "0.75rem",
+                        borderRadius: "8px",
+                        marginBottom: "1rem",
+                        border: `2px solid ${selectedIssue.aiAnalysis.safetyConsiderations.riskLevel === "critical" || selectedIssue.aiAnalysis.safetyConsiderations.riskLevel === "high" ? "#e03131" : "#f59f00"}`
+                      }}>
+                        <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "#c92a2a", marginBottom: "0.5rem" }}>
+                          ⚠️ Risk Level: {selectedIssue.aiAnalysis.safetyConsiderations.riskLevel.toUpperCase()}
+                        </div>
+                        {selectedIssue.aiAnalysis.safetyConsiderations.hazards.length > 0 && (
+                          <div style={{ fontSize: "0.85rem", color: "#495057" }}>
+                            <strong>Hazards:</strong> {selectedIssue.aiAnalysis.safetyConsiderations.hazards.slice(0, 3).join(", ")}
+                            {selectedIssue.aiAnalysis.safetyConsiderations.hazards.length > 3 && "..."}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Immediate Actions */}
+                    {selectedIssue.aiAnalysis.recommendations?.immediateActions && selectedIssue.aiAnalysis.recommendations.immediateActions.length > 0 && (
+                      <div style={{ marginBottom: "1rem" }}>
+                        <div style={{ fontSize: "0.9rem", fontWeight: "600", color: "#1971c2", marginBottom: "0.5rem" }}>
+                          ⚡ Immediate Actions Required:
+                        </div>
+                        <ol style={{ margin: 0, paddingLeft: "1.5rem", fontSize: "0.9rem", color: "#495057" }}>
+                          {selectedIssue.aiAnalysis.recommendations.immediateActions.slice(0, 3).map((action, i) => (
+                            <li key={i} style={{ marginBottom: "0.25rem" }}>{action}</li>
+                          ))}
+                          {selectedIssue.aiAnalysis.recommendations.immediateActions.length > 3 && (
+                            <li style={{ fontStyle: "italic", color: "#868e96" }}>
+                              ... and {selectedIssue.aiAnalysis.recommendations.immediateActions.length - 3} more actions (view full report)
+                            </li>
+                          )}
+                        </ol>
+                      </div>
+                    )}
+
+                    {/* View Full Report Button */}
+                    <button
+                      onClick={() => {
+                        setShowModal(false);
+                        router.push(`/report/${selectedIssue.id}`);
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "0.75rem",
+                        background: "linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontWeight: "600",
+                        fontSize: "1rem",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease"
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+                      onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
+                    >
+                      📄 View Complete Report with All Details
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className={styles.formGroup}>

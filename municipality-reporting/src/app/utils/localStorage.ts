@@ -7,6 +7,18 @@ export interface User {
   password: string;
   role: "resident" | "staff";
   createdAt: string;
+  preferences?: {
+    emailNotifications: boolean;
+    browserNotifications: boolean;
+    theme: "light" | "dark";
+  };
+}
+
+export interface StatusHistoryEntry {
+  status: "pending" | "in-progress" | "resolved" | "rejected";
+  changedBy: string; // user name or "System"
+  changedAt: string;
+  note?: string;
 }
 
 export interface Issue {
@@ -30,6 +42,36 @@ export interface Issue {
   resolvedAt?: string;
   staffNotes?: string;
   assignedTo?: string;
+  statusHistory?: StatusHistoryEntry[];
+  viewCount?: number;
+  // Comprehensive AI Analysis
+  aiAnalysis?: {
+    issueType: string;
+    keywords: string[];
+    detailedAnalysis: {
+      problemIdentification: string;
+      severityAssessment: string;
+      impactAnalysis: string;
+      rootCause: string;
+      visualEvidence: string[];
+    };
+    recommendations: {
+      immediateActions: string[];
+      longTermSolutions: string[];
+      preventiveMeasures: string[];
+    };
+    estimatedResolution: {
+      timeframe: string;
+      resources: string[];
+      estimatedCost: string;
+      workersRequired: number;
+    };
+    safetyConsiderations: {
+      riskLevel: string;
+      hazards: string[];
+      precautions: string[];
+    };
+  };
 }
 
 const USERS_KEY = "limpopo_users";
@@ -127,6 +169,15 @@ export const storageUtils = {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      viewCount: 0,
+      statusHistory: [
+        {
+          status: issue.status,
+          changedBy: "System",
+          changedAt: new Date().toISOString(),
+          note: "Report created",
+        },
+      ],
     };
     issues.push(newIssue);
     localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
@@ -146,21 +197,56 @@ export const storageUtils = {
   },
 
   // Update issue
-  updateIssue: (issueId: string, updates: Partial<Issue>): Issue | null => {
+  updateIssue: (
+    issueId: string,
+    updates: Partial<Issue>,
+    changedBy?: string,
+    note?: string
+  ): Issue | null => {
     const issues = storageUtils.getIssues();
     const index = issues.findIndex((issue) => issue.id === issueId);
 
     if (index === -1) return null;
 
+    const oldStatus = issues[index].status;
+    const newStatus = updates.status;
+
+    // Add status history if status changed
+    const statusHistory = [...(issues[index].statusHistory || [])];
+    if (newStatus && newStatus !== oldStatus) {
+      statusHistory.push({
+        status: newStatus,
+        changedBy: changedBy || "System",
+        changedAt: new Date().toISOString(),
+        note,
+      });
+    }
+
     const updatedIssue = {
       ...issues[index],
       ...updates,
+      statusHistory,
       updatedAt: new Date().toISOString(),
+      resolvedAt:
+        newStatus === "resolved" && !issues[index].resolvedAt
+          ? new Date().toISOString()
+          : issues[index].resolvedAt,
     };
 
     issues[index] = updatedIssue;
     localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
     return updatedIssue;
+  },
+
+  // Increment view count
+  incrementViewCount: (issueId: string): void => {
+    const issues = storageUtils.getIssues();
+    const index = issues.findIndex((issue) => issue.id === issueId);
+
+    if (index !== -1) {
+      issues[index].viewCount = (issues[index].viewCount || 0) + 1;
+      localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
+    }
   },
 
   // Delete issue
