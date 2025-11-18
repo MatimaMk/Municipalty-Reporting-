@@ -45,7 +45,7 @@ interface CategoryKeywords {
   priority: "low" | "medium" | "high" | "urgent";
 }
 
-const GEMINI_API_KEY = "AIzaSyA3bQvZUYEbVwETFvJKyQVl4Xx0xefA1z8";
+const GEMINI_API_KEY = "AIzaSyDrvzfg3h4I04n7QXCI6JF14t6jiT5gykE";
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 const categoryPatterns: CategoryKeywords[] = [

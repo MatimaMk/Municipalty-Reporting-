@@ -50,9 +50,6 @@ export default function LandingPage() {
             </>
           ) : (
             <>
-              <Link href="/create-report" className={`${styles.navLink} ${styles.navLinkReport}`}>
-                Report Issue
-              </Link>
               <Link href="/login" className={styles.navLink}>
                 Login
               </Link>
@@ -85,19 +82,15 @@ export default function LandingPage() {
             and information
           </p>
           <div className={styles.heroButtons}>
-            {mounted && !isLoggedIn && (
+            {!isLoggedIn ? (
               <Link href="/create-report" className={styles.heroReportButton}>
-                📸 Report an Issue (No Login Required)
+                📸 Report an Issue
+              </Link>
+            ) : (
+              <Link href={dashboardPath} className={styles.heroCTA}>
+                Go to Dashboard
               </Link>
             )}
-            {!mounted && (
-              <Link href="/create-report" className={styles.heroReportButton}>
-                📸 Report an Issue (No Login Required)
-              </Link>
-            )}
-            <Link href={mounted && isLoggedIn ? dashboardPath : "/register"} className={styles.heroCTA}>
-              {mounted && isLoggedIn ? "Go to Dashboard" : "Create Account"}
-            </Link>
           </div>
         </div>
       </section>

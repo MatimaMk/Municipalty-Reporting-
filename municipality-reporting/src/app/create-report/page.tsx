@@ -22,6 +22,7 @@ export default function CreateReportPage() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [detectionStatus, setDetectionStatus] = useState("Initializing camera...");
+  const [detectedObjects, setDetectedObjects] = useState<string[]>([]);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const detectionIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -159,6 +160,49 @@ export default function CreateReportPage() {
     setDetectionStatus("Initializing camera...");
   };
 
+  // AI-powered object detection
+  const detectObjectsInFrame = async () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+
+      if (ctx && video.readyState === video.HAVE_ENOUGH_DATA) {
+        // Set canvas size to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Draw current frame
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert to base64
+        const base64Image = canvas.toDataURL("image/jpeg", 0.7).split(",")[1];
+
+        try {
+          // Call Gemini API for object detection
+          const response = await fetch("/api/detect-objects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: base64Image }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.objects && data.objects.length > 0) {
+              setDetectedObjects(data.objects);
+              setDetectionStatus(`✅ Detected: ${data.objects.join(", ")}`);
+            } else {
+              setDetectedObjects([]);
+              setDetectionStatus("✅ Camera ready - Position issue in frame");
+            }
+          }
+        } catch (error) {
+          console.error("Object detection error:", error);
+        }
+      }
+    }
+  };
+
   // Simple object detection based on image analysis
   const startObjectDetection = () => {
     // Clear any existing interval
@@ -166,7 +210,7 @@ export default function CreateReportPage() {
       clearInterval(detectionIntervalRef.current);
     }
 
-    // Check video quality and provide feedback every 2 seconds
+    // Check video quality and detect objects every 3 seconds
     detectionIntervalRef.current = setInterval(() => {
       if (videoRef.current && canvasRef.current) {
         const video = videoRef.current;
@@ -188,7 +232,7 @@ export default function CreateReportPage() {
           // Calculate average brightness
           let totalBrightness = 0;
           let pixelCount = 0;
-          for (let i = 0; i < data.length; i += 16) { // Sample every 4th pixel for performance
+          for (let i = 0; i < data.length; i += 16) {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
@@ -205,19 +249,23 @@ export default function CreateReportPage() {
           }
           const avgVariance = variance / pixelCount;
 
-          // Provide feedback
+          // Check quality first
           if (avgBrightness < 50) {
             setDetectionStatus("⚠️ Too dark - Move to better lighting");
+            setDetectedObjects([]);
           } else if (avgBrightness > 200) {
             setDetectionStatus("⚠️ Too bright - Reduce glare");
+            setDetectedObjects([]);
           } else if (avgVariance < 20) {
             setDetectionStatus("⚠️ Image unclear - Focus on issue");
+            setDetectedObjects([]);
           } else {
-            setDetectionStatus("✅ Good lighting - Ready to capture!");
+            // Good quality - run AI object detection
+            detectObjectsInFrame();
           }
         }
       }
-    }, 2000); // Check every 2 seconds
+    }, 3000); // Check every 3 seconds
   };
 
   const capturePhoto = () => {
@@ -527,7 +575,17 @@ export default function CreateReportPage() {
                     <div className={styles.corner} style={{ top: 0, right: 0 }}></div>
                     <div className={styles.corner} style={{ bottom: 0, left: 0 }}></div>
                     <div className={styles.corner} style={{ bottom: 0, right: 0 }}></div>
-                    <div className={styles.targetLabel}>Position Issue Here</div>
+                    {detectedObjects.length > 0 ? (
+                      <div className={styles.detectedObjectsBox}>
+                        {detectedObjects.map((obj, index) => (
+                          <div key={index} className={styles.detectedObject}>
+                            🎯 {obj}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={styles.targetLabel}>Position Issue Here</div>
+                    )}
                   </div>
                   {cameraReady && (
                     <div className={styles.detectionOverlay}>

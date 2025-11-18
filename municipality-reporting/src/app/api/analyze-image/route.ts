@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const GEMINI_API_KEY = "AIzaSyA3bQvZUYEbVwETFvJKyQVl4Xx0xefA1z8";
+const GEMINI_API_KEY = "AIzaSyDrvzfg3h4I04n7QXCI6JF14t6jiT5gykE";
 
 interface AnalysisResult {
   title: string;
@@ -101,7 +101,11 @@ Provide a COMPLETE professional report in the following JSON format:
   }
 }
 
-${latitude && longitude ? `\nLocation context: Latitude ${latitude}, Longitude ${longitude}` : ""}
+${
+  latitude && longitude
+    ? `\nLocation context: Latitude ${latitude}, Longitude ${longitude}`
+    : ""
+}
 
 Be thorough, professional, and specific. This report will be reviewed by municipal staff and used for planning and resource allocation.
 
@@ -151,8 +155,7 @@ Remember: Respond with ONLY the JSON object, nothing else.`;
     }
 
     const data = await response.json();
-    const generatedText =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     if (!generatedText) {
       return NextResponse.json(
