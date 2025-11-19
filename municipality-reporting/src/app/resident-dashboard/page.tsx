@@ -15,6 +15,9 @@ export default function ResidentDashboard() {
   const [loading, setLoading] = useState(true);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
   const [analyticsSummary, setAnalyticsSummary] = useState<any>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
     const currentUser = storageUtils.getCurrentUser();
@@ -46,6 +49,51 @@ export default function ResidentDashboard() {
     // Load analytics
     const summary = analyticsUtils.getAnalyticsSummary(userId);
     setAnalyticsSummary(summary);
+  };
+
+  const handleConfirmResolution = (issue: Issue) => {
+    if (!user) return;
+
+    const confirmed = window.confirm(
+      "Are you confirming that this issue has been resolved to your satisfaction?"
+    );
+
+    if (confirmed) {
+      storageUtils.confirmResolution(
+        issue.id,
+        `${user.firstName} ${user.lastName}`
+      );
+      loadMyIssues(user.id);
+      alert("Thank you for confirming! Your feedback helps us improve our services.");
+    }
+  };
+
+  const handleNotResolved = (issue: Issue) => {
+    setSelectedIssue(issue);
+    setShowFeedbackModal(true);
+  };
+
+  const handleSubmitFeedback = () => {
+    if (!user || !selectedIssue) return;
+
+    if (!feedback.trim()) {
+      alert("Please provide feedback about why the issue is not resolved.");
+      return;
+    }
+
+    storageUtils.rejectResolution(
+      selectedIssue.id,
+      `${user.firstName} ${user.lastName}`,
+      feedback
+    );
+
+    loadMyIssues(user.id);
+    setShowFeedbackModal(false);
+    setSelectedIssue(null);
+    setFeedback("");
+    alert(
+      "Thank you for your feedback. The issue has been reopened and assigned back to the department for review."
+    );
   };
 
   const handleLogout = () => {
@@ -317,6 +365,58 @@ export default function ResidentDashboard() {
                       </p>
                     </div>
                   )}
+
+                  {/* Resolution Confirmation */}
+                  {issue.status === "resolved" && !issue.residentConfirmed && (
+                    <div className={styles.confirmationSection}>
+                      <p className={styles.confirmationText}>
+                        ✅ This issue has been marked as resolved. Can you confirm?
+                      </p>
+                      <div className={styles.confirmationButtons}>
+                        <button
+                          onClick={() => handleConfirmResolution(issue)}
+                          className={styles.confirmButton}
+                          type="button"
+                        >
+                          ✓ Confirm Resolution
+                        </button>
+                        <button
+                          onClick={() => handleNotResolved(issue)}
+                          className={styles.notResolvedButton}
+                          type="button"
+                        >
+                          ✗ Not Resolved
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Confirmed Badge */}
+                  {issue.residentConfirmed && (
+                    <div className={styles.confirmedBadge}>
+                      <span className={styles.confirmedIcon}>✓</span>
+                      <span className={styles.confirmedText}>
+                        Confirmed by you on {formatDate(issue.residentConfirmedAt || "")}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Rejected Badge */}
+                  {issue.residentRejected && (
+                    <div className={styles.rejectedBadge}>
+                      <div className={styles.rejectedHeader}>
+                        <span className={styles.rejectedIcon}>✗</span>
+                        <span className={styles.rejectedText}>
+                          Reported as not resolved on {formatDate(issue.residentRejectedAt || "")}
+                        </span>
+                      </div>
+                      {issue.residentFeedback && (
+                        <div className={styles.rejectedFeedback}>
+                          &ldquo;{issue.residentFeedback}&rdquo;
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -331,6 +431,76 @@ export default function ResidentDashboard() {
           Peace, Unity and Prosperity
         </p>
       </footer>
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && selectedIssue && (
+        <div className={styles.modalOverlay} onClick={() => setShowFeedbackModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowFeedbackModal(false)}
+                type="button"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.issueInfoCompact}>
+                <div className={styles.issueInfoRow}>
+                  <strong className={styles.issueInfoTitle}>{selectedIssue.title}</strong>
+                </div>
+                <div className={styles.issueMetaCompact}>
+                  <span className={styles.metaBadge}>
+                    <span className={styles.metaIcon}>📍</span>
+                    {selectedIssue.location}
+                  </span>
+                  <span className={styles.metaBadge}>
+                    <span className={styles.metaIcon}>📂</span>
+                    {selectedIssue.category}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.labelCompact}>
+                  What&apos;s the problem? <span className={styles.required}>*</span>
+                </label>
+                <textarea
+                  className={styles.textareaCompact}
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Describe what still needs to be fixed..."
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className={styles.modalFooterButtons}>
+                <button
+                  className={styles.modalSubmitBtn}
+                  onClick={handleSubmitFeedback}
+                  type="button"
+                  disabled={!feedback.trim()}
+                >
+                  Submit
+                </button>
+                <button
+                  className={styles.modalCancelBtn}
+                  onClick={() => {
+                    setShowFeedbackModal(false);
+                    setFeedback("");
+                  }}
+                  type="button"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -329,6 +329,88 @@ export default function EmployeeDashboard() {
                 )}
               </div>
 
+              {/* Resident Confirmation/Rejection Status */}
+              {selectedIssue.residentConfirmed && (
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #d3f9d8 0%, #b2f2bb 100%)",
+                    padding: "1rem 1.5rem",
+                    borderRadius: "12px",
+                    marginBottom: "1.5rem",
+                    border: "2px solid #40c057",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      background: "#40c057",
+                      color: "white",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.2rem",
+                      fontWeight: "700",
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.95rem",
+                      fontWeight: "600",
+                      color: "#2b8a3e",
+                    }}
+                  >
+                    Confirmed by resident - Great work!
+                  </span>
+                </div>
+              )}
+
+              {selectedIssue.residentRejected && selectedIssue.residentFeedback && (
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%)",
+                    padding: "1rem 1.5rem",
+                    borderRadius: "12px",
+                    marginBottom: "1.5rem",
+                    border: "2px solid #fa5252",
+                  }}
+                >
+                  <h4
+                    style={{
+                      color: "#c92a2a",
+                      marginTop: 0,
+                      marginBottom: "0.75rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    <span>💬</span> Resident Feedback - Needs Attention
+                  </h4>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "#495057",
+                      fontSize: "0.95rem",
+                      lineHeight: "1.6",
+                      fontStyle: "italic",
+                      background: "white",
+                      padding: "0.75rem",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    &ldquo;{selectedIssue.residentFeedback}&rdquo;
+                  </p>
+                </div>
+              )}
+
               <div className={styles.formGroup}>
                 <label className={styles.label}>Update Status</label>
                 <select

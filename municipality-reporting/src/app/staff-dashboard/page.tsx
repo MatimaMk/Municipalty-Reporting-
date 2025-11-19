@@ -587,13 +587,74 @@ export default function StaffDashboard() {
                     fontSize: "0.9rem",
                     color: "#666",
                     marginBottom: "1rem",
+                    flexWrap: "wrap",
                   }}
                 >
                   <span>👤 {selectedIssue.userName}</span>
                   <span>📍 {selectedIssue.location}</span>
                   <span>📂 {selectedIssue.category}</span>
                   <span>⚡ Priority: <strong>{selectedIssue.priority.toUpperCase()}</strong></span>
+                  {selectedIssue.residentConfirmed && (
+                    <span style={{
+                      background: "linear-gradient(135deg, #d3f9d8 0%, #b2f2bb 100%)",
+                      color: "#2b8a3e",
+                      padding: "0.25rem 0.75rem",
+                      borderRadius: "12px",
+                      fontWeight: "600",
+                      border: "2px solid #40c057"
+                    }}>
+                      ✓ Confirmed by Resident
+                    </span>
+                  )}
+                  {selectedIssue.residentRejected && (
+                    <span style={{
+                      background: "linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%)",
+                      color: "#c92a2a",
+                      padding: "0.25rem 0.75rem",
+                      borderRadius: "12px",
+                      fontWeight: "600",
+                      border: "2px solid #fa5252"
+                    }}>
+                      ✗ Reported Not Resolved
+                    </span>
+                  )}
                 </div>
+
+                {/* Resident Rejection Feedback */}
+                {selectedIssue.residentRejected && selectedIssue.residentFeedback && (
+                  <div style={{
+                    background: "linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%)",
+                    padding: "1rem 1.5rem",
+                    borderRadius: "12px",
+                    marginBottom: "1rem",
+                    border: "2px solid #fa5252"
+                  }}>
+                    <h4 style={{ color: "#c92a2a", marginTop: 0, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span>💬</span> Resident Feedback - Issue Not Resolved
+                    </h4>
+                    <p style={{
+                      margin: 0,
+                      color: "#495057",
+                      fontSize: "0.95rem",
+                      lineHeight: "1.6",
+                      fontStyle: "italic",
+                      background: "white",
+                      padding: "0.75rem",
+                      borderRadius: "8px"
+                    }}>
+                      &ldquo;{selectedIssue.residentFeedback}&rdquo;
+                    </p>
+                    {selectedIssue.residentRejectedAt && (
+                      <p style={{
+                        margin: "0.5rem 0 0 0",
+                        fontSize: "0.85rem",
+                        color: "#868e96"
+                      }}>
+                        Reported on: {formatDate(selectedIssue.residentRejectedAt)}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* AI Analysis Summary for Staff */}
                 {selectedIssue.aiAnalysis && (

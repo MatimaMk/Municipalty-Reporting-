@@ -48,6 +48,11 @@ export interface Issue {
   assignedToEmployeeName?: string; // Employee name for display
   assignedBy?: string; // Staff member who assigned the issue
   assignedAt?: string; // When the issue was assigned
+  residentConfirmed?: boolean; // Resident confirmed issue is resolved
+  residentConfirmedAt?: string; // When resident confirmed resolution
+  residentRejected?: boolean; // Resident reported issue not resolved
+  residentRejectedAt?: string; // When resident rejected resolution
+  residentFeedback?: string; // Resident's feedback about the issue
   statusHistory?: StatusHistoryEntry[];
   viewCount?: number;
   // Comprehensive AI Analysis
@@ -340,6 +345,68 @@ export const storageUtils = {
       assignedToEmployeeName: employeeName,
       assignedBy,
       assignedAt: new Date().toISOString(),
+      statusHistory,
+      updatedAt: new Date().toISOString(),
+    };
+
+    issues[index] = updatedIssue;
+    localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
+    return updatedIssue;
+  },
+
+  // Resident confirms issue resolution
+  confirmResolution: (issueId: string, residentName: string): Issue | null => {
+    const issues = storageUtils.getIssues();
+    const index = issues.findIndex((issue) => issue.id === issueId);
+
+    if (index === -1) return null;
+
+    const statusHistory = [...(issues[index].statusHistory || [])];
+    statusHistory.push({
+      status: issues[index].status,
+      changedBy: residentName,
+      changedAt: new Date().toISOString(),
+      note: "Resident confirmed issue has been resolved",
+    });
+
+    const updatedIssue = {
+      ...issues[index],
+      residentConfirmed: true,
+      residentConfirmedAt: new Date().toISOString(),
+      statusHistory,
+      updatedAt: new Date().toISOString(),
+    };
+
+    issues[index] = updatedIssue;
+    localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
+    return updatedIssue;
+  },
+
+  // Resident reports issue not resolved
+  rejectResolution: (
+    issueId: string,
+    residentName: string,
+    feedback: string
+  ): Issue | null => {
+    const issues = storageUtils.getIssues();
+    const index = issues.findIndex((issue) => issue.id === issueId);
+
+    if (index === -1) return null;
+
+    const statusHistory = [...(issues[index].statusHistory || [])];
+    statusHistory.push({
+      status: "in-progress",
+      changedBy: residentName,
+      changedAt: new Date().toISOString(),
+      note: `Resident reported issue not resolved: ${feedback}`,
+    });
+
+    const updatedIssue = {
+      ...issues[index],
+      status: "in-progress" as const,
+      residentRejected: true,
+      residentRejectedAt: new Date().toISOString(),
+      residentFeedback: feedback,
       statusHistory,
       updatedAt: new Date().toISOString(),
     };
