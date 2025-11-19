@@ -5,7 +5,8 @@ export interface User {
   lastName: string;
   email: string;
   password: string;
-  role: "resident" | "staff";
+  role: "resident" | "staff" | "employee";
+  department?: string; // For employees: "roads", "water", "electricity", "waste", "safety", "parks"
   createdAt: string;
   preferences?: {
     emailNotifications: boolean;
@@ -41,7 +42,12 @@ export interface Issue {
   updatedAt: string;
   resolvedAt?: string;
   staffNotes?: string;
-  assignedTo?: string;
+  assignedTo?: string; // Legacy field - now using assignedToEmployee
+  department?: string; // Department assigned to (e.g., "roads", "water", "electricity")
+  assignedToEmployee?: string; // Employee ID assigned to handle this issue
+  assignedToEmployeeName?: string; // Employee name for display
+  assignedBy?: string; // Staff member who assigned the issue
+  assignedAt?: string; // When the issue was assigned
   statusHistory?: StatusHistoryEntry[];
   viewCount?: number;
   // Comprehensive AI Analysis
@@ -278,6 +284,69 @@ export const storageUtils = {
       urgent: issues.filter((i) => i.priority === "urgent").length,
       high: issues.filter((i) => i.priority === "high").length,
     };
+  },
+
+  // Get employees by department
+  getEmployeesByDepartment: (department: string): User[] => {
+    const users = storageUtils.getUsers();
+    return users.filter(
+      (user) => user.role === "employee" && user.department === department
+    );
+  },
+
+  // Get all employees
+  getAllEmployees: (): User[] => {
+    const users = storageUtils.getUsers();
+    return users.filter((user) => user.role === "employee");
+  },
+
+  // Get issues assigned to employee
+  getIssuesAssignedToEmployee: (employeeId: string): Issue[] => {
+    const issues = storageUtils.getIssues();
+    return issues.filter((issue) => issue.assignedToEmployee === employeeId);
+  },
+
+  // Get issues by department
+  getIssuesByDepartment: (department: string): Issue[] => {
+    const issues = storageUtils.getIssues();
+    return issues.filter((issue) => issue.department === department);
+  },
+
+  // Assign issue to department and employee
+  assignIssue: (
+    issueId: string,
+    department: string,
+    employeeId: string,
+    employeeName: string,
+    assignedBy: string
+  ): Issue | null => {
+    const issues = storageUtils.getIssues();
+    const index = issues.findIndex((issue) => issue.id === issueId);
+
+    if (index === -1) return null;
+
+    const statusHistory = [...(issues[index].statusHistory || [])];
+    statusHistory.push({
+      status: issues[index].status,
+      changedBy: assignedBy,
+      changedAt: new Date().toISOString(),
+      note: `Assigned to ${department} department - ${employeeName}`,
+    });
+
+    const updatedIssue = {
+      ...issues[index],
+      department,
+      assignedToEmployee: employeeId,
+      assignedToEmployeeName: employeeName,
+      assignedBy,
+      assignedAt: new Date().toISOString(),
+      statusHistory,
+      updatedAt: new Date().toISOString(),
+    };
+
+    issues[index] = updatedIssue;
+    localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
+    return updatedIssue;
   },
 };
 

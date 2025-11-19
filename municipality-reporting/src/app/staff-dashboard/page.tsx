@@ -29,7 +29,12 @@ export default function StaffDashboard() {
   const [modalData, setModalData] = useState({
     status: "" as Issue["status"],
     staffNotes: "",
+    department: "",
+    assignedToEmployee: "",
   });
+
+  const [employees, setEmployees] = useState<User[]>([]);
+  const [availableEmployees, setAvailableEmployees] = useState<User[]>([]);
 
   useEffect(() => {
     const currentUser = storageUtils.getCurrentUser();
@@ -109,12 +114,58 @@ export default function StaffDashboard() {
     setModalData({
       status: issue.status,
       staffNotes: issue.staffNotes || "",
+      department: issue.department || issue.category || "",
+      assignedToEmployee: issue.assignedToEmployee || "",
     });
+
+    // Load all employees
+    const allEmployees = storageUtils.getAllEmployees();
+    setEmployees(allEmployees);
+
+    // Load employees for the selected department
+    const dept = issue.department || issue.category || "";
+    if (dept) {
+      const deptEmployees = storageUtils.getEmployeesByDepartment(dept);
+      setAvailableEmployees(deptEmployees);
+    } else {
+      setAvailableEmployees([]);
+    }
+
     setShowModal(true);
   };
 
+  const handleDepartmentChange = (department: string) => {
+    setModalData((prev) => ({
+      ...prev,
+      department,
+      assignedToEmployee: "", // Reset employee selection when department changes
+    }));
+
+    // Load employees for the selected department
+    if (department) {
+      const deptEmployees = storageUtils.getEmployeesByDepartment(department);
+      setAvailableEmployees(deptEmployees);
+    } else {
+      setAvailableEmployees([]);
+    }
+  };
+
   const handleUpdateIssue = () => {
-    if (!selectedIssue) return;
+    if (!selectedIssue || !user) return;
+
+    // Handle assignment if department and employee are selected
+    if (modalData.department && modalData.assignedToEmployee) {
+      const employee = employees.find((emp) => emp.id === modalData.assignedToEmployee);
+      if (employee) {
+        storageUtils.assignIssue(
+          selectedIssue.id,
+          modalData.department,
+          employee.id,
+          `${employee.firstName} ${employee.lastName}`,
+          `${user.firstName} ${user.lastName}`
+        );
+      }
+    }
 
     const updates: Partial<Issue> = {
       status: modalData.status,
@@ -128,7 +179,12 @@ export default function StaffDashboard() {
       updates.resolvedAt = new Date().toISOString();
     }
 
-    storageUtils.updateIssue(selectedIssue.id, updates);
+    storageUtils.updateIssue(
+      selectedIssue.id,
+      updates,
+      `${user.firstName} ${user.lastName}`,
+      "Issue updated by staff"
+    );
     loadAllIssues();
     setShowModal(false);
     setSelectedIssue(null);
@@ -667,6 +723,68 @@ export default function StaffDashboard() {
                     >
                       📄 View Complete Report with All Details
                     </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Department and Employee Assignment */}
+              <div className={styles.assignmentSection}>
+                <h3 className={styles.sectionTitle}>🏢 Department Assignment</h3>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Assign to Department</label>
+                  <select
+                    className={styles.select}
+                    aria-label="Assign to Department"
+                    value={modalData.department}
+                    onChange={(e) => handleDepartmentChange(e.target.value)}
+                  >
+                    <option value="">Select Department</option>
+                    <option value="roads">Roads & Infrastructure</option>
+                    <option value="water">Water & Sanitation</option>
+                    <option value="electricity">Electricity</option>
+                    <option value="waste">Waste Management</option>
+                    <option value="safety">Public Safety</option>
+                    <option value="parks">Parks & Recreation</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Assign to Employee</label>
+                  <select
+                    className={styles.select}
+                    aria-label="Assign to Employee"
+                    value={modalData.assignedToEmployee}
+                    onChange={(e) =>
+                      setModalData((prev) => ({
+                        ...prev,
+                        assignedToEmployee: e.target.value,
+                      }))
+                    }
+                    disabled={!modalData.department || availableEmployees.length === 0}
+                  >
+                    <option value="">
+                      {!modalData.department
+                        ? "Select department first"
+                        : availableEmployees.length === 0
+                        ? "No employees in this department"
+                        : "Select Employee"}
+                    </option>
+                    {availableEmployees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.firstName} {emp.lastName} ({emp.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedIssue?.assignedToEmployeeName && (
+                  <div className={styles.currentAssignment}>
+                    <span>📌 Currently assigned to: </span>
+                    <strong>{selectedIssue.assignedToEmployeeName}</strong>
+                    {selectedIssue.department && (
+                      <span> ({selectedIssue.department})</span>
+                    )}
                   </div>
                 )}
               </div>

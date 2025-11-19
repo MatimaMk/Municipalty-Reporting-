@@ -68,7 +68,12 @@ export default function LoginPage() {
     if (user) {
       storageUtils.setCurrentUser(user);
       // Redirect to appropriate dashboard based on role
-      const dashboardPath = user.role === "staff" ? "/staff-dashboard" : "/resident-dashboard";
+      let dashboardPath = "/resident-dashboard";
+      if (user.role === "staff") {
+        dashboardPath = "/staff-dashboard";
+      } else if (user.role === "employee") {
+        dashboardPath = "/employee-dashboard";
+      }
       router.push(dashboardPath);
     } else {
       setErrors((prev) => ({

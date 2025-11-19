@@ -15,7 +15,8 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "resident" as "resident" | "staff",
+    role: "resident" as "resident" | "staff" | "employee",
+    department: "",
     agreeTerms: false,
   });
 
@@ -134,13 +135,19 @@ export default function RegisterPage() {
       email: formData.email,
       password: formData.password,
       role: formData.role,
+      department: formData.role === "employee" ? formData.department : undefined,
     });
 
     // Auto-login after registration
     storageUtils.setCurrentUser(newUser);
 
     // Redirect to appropriate dashboard based on role
-    const dashboardPath = newUser.role === "staff" ? "/staff-dashboard" : "/resident-dashboard";
+    let dashboardPath = "/resident-dashboard";
+    if (newUser.role === "staff") {
+      dashboardPath = "/staff-dashboard";
+    } else if (newUser.role === "employee") {
+      dashboardPath = "/employee-dashboard";
+    }
     router.push(dashboardPath);
   };
 
@@ -268,8 +275,9 @@ export default function RegisterPage() {
                 className={styles.input}
               >
                 <option value="resident">Resident - Report Issues</option>
+                <option value="employee">Department Employee - Handle Assigned Issues</option>
                 <option value="staff">
-                  Municipality Staff - Manage Issues
+                  Municipality Staff - Manage & Assign Issues
                 </option>
               </select>
               <p
@@ -279,11 +287,34 @@ export default function RegisterPage() {
                   marginTop: "0.5rem",
                 }}
               >
-                Choose &quot;Resident&quot; to report community issues or
-                &quot;Municipality Staff&quot; to access the management
-                dashboard.
+                Choose your role to access the appropriate dashboard
               </p>
             </div>
+
+            {/* Department Selection - Only for Employees */}
+            {formData.role === "employee" && (
+              <div className={styles.formGroup}>
+                <label htmlFor="department" className={styles.label}>
+                  Department <span className={styles.required}>*</span>
+                </label>
+                <select
+                  id="department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  className={styles.input}
+                  required
+                >
+                  <option value="">Select Department</option>
+                  <option value="roads">Roads & Infrastructure</option>
+                  <option value="water">Water & Sanitation</option>
+                  <option value="electricity">Electricity</option>
+                  <option value="waste">Waste Management</option>
+                  <option value="safety">Public Safety</option>
+                  <option value="parks">Parks & Recreation</option>
+                </select>
+              </div>
+            )}
 
             <div className={styles.formGroup}>
               <label htmlFor="password" className={styles.label}>
